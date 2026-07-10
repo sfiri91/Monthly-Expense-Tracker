@@ -393,7 +393,31 @@
 
   <script>
     const CYLL_TOP = 18, CYLL_BOT = 218, CYLL_H = 200;
+    const LS_SALARY = 'et_salary';
+    const LS_EXPENSES = 'et_expenses';
+
     let salary = 0, expenses = [];
+
+    function save() {
+      localStorage.setItem(LS_SALARY, salary);
+      localStorage.setItem(LS_EXPENSES, JSON.stringify(expenses));
+    }
+
+    function load() {
+      const s = parseFloat(localStorage.getItem(LS_SALARY));
+      const e = localStorage.getItem(LS_EXPENSES);
+      if (s && s > 0) {
+        salary = s;
+        expenses = e ? JSON.parse(e) : [];
+        document.getElementById('salaryForm').classList.add('hidden');
+        document.getElementById('salaryConfirmed').classList.remove('hidden');
+        document.getElementById('salaryBig').textContent = fmt(salary) + ' Kč';
+        document.getElementById('addCard').classList.remove('hidden');
+        document.getElementById('listCard').classList.remove('hidden');
+        renderList();
+        updateCylinder();
+      }
+    }
 
     function fmt(n) {
       return Math.round(n).toLocaleString('cs-CZ');
@@ -413,6 +437,7 @@
       document.getElementById('salaryBig').textContent = fmt(salary) + ' Kč';
       document.getElementById('addCard').classList.remove('hidden');
       document.getElementById('listCard').classList.remove('hidden');
+      save();
       renderList();
       updateCylinder();
     }
@@ -425,6 +450,7 @@
       document.getElementById('addCard').classList.add('hidden');
       document.getElementById('listCard').classList.add('hidden');
       document.getElementById('overflowWarn').classList.remove('show');
+      save();
       renderList();
       updateCylinder();
     }
@@ -440,17 +466,23 @@
       expenses.push({ name, amt, id: Date.now() });
       document.getElementById('expName').value = '';
       document.getElementById('expAmt').value = '';
+      save();
       renderList();
       updateCylinder();
     }
 
     function deleteExpense(id) {
       expenses = expenses.filter(e => e.id !== id);
-      renderList(); updateCylinder();
+      save();
+      renderList();
+      updateCylinder();
     }
 
     function clearAll() {
-      expenses = []; renderList(); updateCylinder();
+      expenses = [];
+      save();
+      renderList();
+      updateCylinder();
     }
 
     function renderList() {
@@ -491,7 +523,6 @@
       liq.setAttribute('fill', color);
       men.setAttribute('fill', menColor);
 
-      // Stats
       const statR = document.getElementById('statRemaining');
       statR.textContent = salary > 0 ? (remaining >= 0 ? fmt(remaining) : '-' + fmt(Math.abs(remaining))) + ' Kč' : '—';
       statR.className = 'stat-val ' + (salary === 0 ? '' : remaining < 0 ? 'danger' : remaining < salary * 0.2 ? 'warn' : 'safe');
@@ -507,7 +538,6 @@
       bar.style.width = pctNum + '%';
       bar.style.background = color;
 
-      // Overflow
       const warn = document.getElementById('overflowWarn');
       if (salary > 0 && total > salary) {
         warn.classList.add('show');
@@ -533,7 +563,6 @@
       g.innerHTML = html;
     }
 
-    // Enter key support
     document.addEventListener('keydown', e => {
       if (e.key !== 'Enter') return;
       if (document.activeElement.id === 'salaryInput') setSalary();
@@ -542,6 +571,7 @@
 
     drawGradMarks();
     updateCylinder();
+    load();
   </script>
 </body>
 </html>
