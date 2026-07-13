@@ -7,6 +7,7 @@ const styles = {
     border: '0.5px solid var(--border)',
     borderRadius: 'var(--radius)',
     overflow: 'hidden',
+    marginBottom: 'calc(env(safe-area-inset-bottom) + 16px)',
   },
   header: {
     display: 'flex',

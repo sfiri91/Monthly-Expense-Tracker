@@ -38,7 +38,7 @@ body,
 
 body {
   padding-top:    calc(var(--safe-top) + 16px);
-  padding-bottom: calc(var(--safe-bot) + 16px);
+  padding-bottom: calc(var(--safe-bot) + 48px);
   padding-left:   16px;
   padding-right:  16px;
   overflow-y: auto;
