@@ -37,6 +37,12 @@ const styles = {
     padding: '11px 18px',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
+    transition: 'background 0.2s, color 0.2s',
+  },
+  btnDisabled: {
+    background: 'var(--surface2)',
+    color: 'var(--muted)',
+    cursor: 'not-allowed',
   },
   btnGhost: {
     background: 'transparent',
@@ -58,22 +64,38 @@ const styles = {
     fontSize: 24,
     fontWeight: 500,
   },
+  errorMsg: {
+    color: 'var(--red)',
+    fontSize: 12,
+    marginTop: 6,
+  },
 };
 
-export default function SalaryCard({ salary, onSet, onEdit }) {
+export default function SalaryCard({ salary, currency, onSet, onEdit }) {
   const [input, setInput] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const raw = e.target.value;
+    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) {
+      setError('Only numbers are allowed.');
+      return;
+    }
+    setError('');
+    setInput(raw);
+  };
+
+  const isValid = parseFloat(input) > 0;
 
   const handleSet = () => {
-    const v = parseFloat(input);
-    if (!v || v <= 0) { setError(true); return; }
-    setError(false);
+    if (!isValid) return;
     setInput('');
-    onSet(v);
+    setError('');
+    onSet(parseFloat(input));
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter') handleSet();
+    if (e.key === 'Enter' && isValid) handleSet();
   };
 
   return (
@@ -81,25 +103,31 @@ export default function SalaryCard({ salary, onSet, onEdit }) {
       <div style={styles.label}>Monthly net salary</div>
 
       {salary === 0 ? (
-        <div style={styles.row}>
-          <input
-            type="number"
-            placeholder="e.g. 45000"
-            min="1"
-            inputMode="numeric"
-            value={input}
-            onChange={(e) => { setInput(e.target.value); setError(false); }}
-            onKeyDown={handleKey}
-            style={error ? { borderColor: 'var(--red)' } : {}}
-          />
-          <span style={styles.unit}>Kč</span>
-          <button style={styles.btnPrimary} onClick={handleSet}>
-            Set salary
-          </button>
+        <div>
+          <div style={styles.row}>
+            <input
+              type="text"
+              placeholder={currency === 'CZK' ? 'e.g. 45000' : 'e.g. 3500'}
+              inputMode="numeric"
+              value={input}
+              onChange={handleChange}
+              onKeyDown={handleKey}
+              style={error ? { borderColor: 'var(--red)' } : {}}
+            />
+            <span style={styles.unit}>{currency}</span>
+            <button
+              style={{ ...styles.btnPrimary, ...(!isValid ? styles.btnDisabled : {}) }}
+              onClick={handleSet}
+              disabled={!isValid}
+            >
+              Set salary
+            </button>
+          </div>
+          {error && <div style={styles.errorMsg}>{error}</div>}
         </div>
       ) : (
         <div style={styles.confirmed}>
-          <span style={styles.salaryBig}>{fmt(salary)} Kč</span>
+          <span style={styles.salaryBig}>{fmt(salary)} {currency}</span>
           <button style={styles.btnGhost} onClick={onEdit}>Change</button>
         </div>
       )}

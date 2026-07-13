@@ -1,11 +1,11 @@
 import React from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { fmt } from './utils/format';
-import Cylinder    from './components/Cylinder';
-import StatsRow    from './components/StatsRow';
-import SalaryCard  from './components/SalaryCard';
-import AddExpenseCard from './components/AddExpenseCard';
-import ExpenseList from './components/ExpenseList';
+import Cylinder          from './components/Cylinder';
+import SalaryCard        from './components/SalaryCard';
+import CurrencySelector  from './components/CurrencySelector';
+import AddExpenseCard    from './components/AddExpenseCard';
+import ExpenseList       from './components/ExpenseList';
 
 const styles = {
   app: {
@@ -63,10 +63,11 @@ const styles = {
 
 export default function App() {
   const [salary,   setSalary]   = useLocalStorage('et_salary',   0);
+  const [currency, setCurrency] = useLocalStorage('et_currency', 'EUR');
   const [expenses, setExpenses] = useLocalStorage('et_expenses', []);
 
-  const total    = expenses.reduce((s, e) => s + e.amt, 0);
-  const spentPct = salary > 0 ? total / salary : 0;
+  const total     = expenses.reduce((s, e) => s + e.amt, 0);
+  const spentPct  = salary > 0 ? total / salary : 1;
   const remaining = salary - total;
 
   const handleSetSalary = (v) => {
@@ -79,17 +80,14 @@ export default function App() {
     setExpenses([]);
   };
 
-  const handleAddExpense = (expense) => {
-    setExpenses((prev) => [...prev, expense]);
-  };
+  // Currency can change freely at any time — no reset needed
+  const handleCurrencyChange = (c) => setCurrency(c);
 
-  const handleDeleteExpense = (id) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
-  };
+  const handleAddExpense    = (expense) => setExpenses((prev) => [...prev, expense]);
+  const handleDeleteExpense = (id)      => setExpenses((prev) => prev.filter((e) => e.id !== id));
+  const handleClearAll      = ()        => setExpenses([]);
 
-  const handleClearAll = () => {
-    setExpenses([]);
-  };
+  const fmtAmt = (n) => (n >= 0 ? fmt(n) : '-' + fmt(Math.abs(n))) + ' ' + currency;
 
   return (
     <div style={styles.app}>
@@ -108,20 +106,18 @@ export default function App() {
             <span style={{
               ...styles.statVal,
               color: salary === 0 ? 'var(--text)'
-                : remaining < 0 ? 'var(--red)'
+                : remaining < 0            ? 'var(--red)'
                 : remaining < salary * 0.2 ? 'var(--amber)'
                 : 'var(--blue)',
             }}>
-              {salary > 0
-                ? (remaining >= 0 ? fmt(remaining) : '-' + fmt(Math.abs(remaining))) + ' Kč'
-                : '—'}
+              {salary > 0 ? fmtAmt(remaining) : '—'}
             </span>
           </div>
 
           <div style={styles.statBlock}>
             <span style={styles.statLabel}>Spent</span>
             <span style={styles.statVal}>
-              {salary > 0 ? fmt(total) + ' Kč' : '—'}
+              {salary > 0 ? fmt(total) + ' ' + currency : '—'}
             </span>
           </div>
 
@@ -133,7 +129,6 @@ export default function App() {
             }}>
               {salary > 0 ? Math.min(Math.round(spentPct * 100), 100) + '%' : '—'}
             </span>
-            {/* Usage bar */}
             <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
               <div style={{
                 height: '100%',
@@ -147,9 +142,13 @@ export default function App() {
         </div>
       </div>
 
+      {/* Currency — always visible */}
+      <CurrencySelector currency={currency} onChange={handleCurrencyChange} />
+
       {/* Salary */}
       <SalaryCard
         salary={salary}
+        currency={currency}
         onSet={handleSetSalary}
         onEdit={handleEditSalary}
       />
@@ -157,17 +156,18 @@ export default function App() {
       {/* Budget exceeded warning */}
       {salary > 0 && total > salary && (
         <div style={styles.warning}>
-          ⚠️ Budget exceeded! You are over by <strong>{fmt(total - salary)} Kč</strong>.
+          ⚠️ Budget exceeded! You are over by <strong>{fmt(total - salary)} {currency}</strong>.
         </div>
       )}
 
-      {/* Add expense + list — only shown once salary is set */}
+      {/* Add expense + list */}
       {salary > 0 && (
         <>
-          <AddExpenseCard onAdd={handleAddExpense} />
+          <AddExpenseCard currency={currency} onAdd={handleAddExpense} />
           <ExpenseList
             expenses={expenses}
             salary={salary}
+            currency={currency}
             onDelete={handleDeleteExpense}
             onClear={handleClearAll}
           />

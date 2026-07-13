@@ -57,7 +57,7 @@ const styles = {
     fontFamily: "'DM Mono', monospace",
     fontSize: 14,
     fontWeight: 500,
-    minWidth: 85,
+    minWidth: 90,
     textAlign: 'right',
   },
   btnDel: {
@@ -77,7 +77,7 @@ const styles = {
   },
 };
 
-export default function ExpenseList({ expenses, salary, onDelete, onClear }) {
+export default function ExpenseList({ expenses, salary, currency, onDelete, onClear }) {
   return (
     <div style={styles.card}>
       <style>{`
@@ -97,9 +97,7 @@ export default function ExpenseList({ expenses, salary, onDelete, onClear }) {
           <div style={styles.empty}>No expenses yet.</div>
         ) : (
           expenses.map((e, idx) => {
-            const pct = salary > 0
-              ? ((e.amt / salary) * 100).toFixed(1)
-              : '—';
+            const pct    = salary > 0 ? ((e.amt / salary) * 100).toFixed(1) : '—';
             const isLast = idx === expenses.length - 1;
             return (
               <div
@@ -108,7 +106,7 @@ export default function ExpenseList({ expenses, salary, onDelete, onClear }) {
               >
                 <span style={styles.name} title={e.name}>{e.name}</span>
                 <span style={styles.pct}>{pct}%</span>
-                <span style={styles.amount}>{fmt(e.amt)} Kč</span>
+                <span style={styles.amount}>{fmt(e.amt)} {currency}</span>
                 <button
                   style={styles.btnDel}
                   onClick={() => onDelete(e.id)}

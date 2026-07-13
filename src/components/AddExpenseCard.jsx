@@ -41,25 +41,47 @@ const styles = {
     padding: '11px 18px',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
+    transition: 'background 0.2s, color 0.2s',
+  },
+  btnDisabled: {
+    background: 'var(--surface2)',
+    color: 'var(--muted)',
+    cursor: 'not-allowed',
+  },
+  errorMsg: {
+    color: 'var(--red)',
+    fontSize: 12,
+    marginTop: 4,
   },
 };
 
-export default function AddExpenseCard({ onAdd }) {
-  const [name, setName]   = useState('');
-  const [amt,  setAmt]    = useState('');
-  const [error, setError] = useState(false);
+export default function AddExpenseCard({ currency, onAdd }) {
+  const [name,  setName]  = useState('');
+  const [amt,   setAmt]   = useState('');
+  const [error, setError] = useState('');
+
+  const handleAmtChange = (e) => {
+    const raw = e.target.value;
+    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) {
+      setError('Only numbers are allowed.');
+      return;
+    }
+    setError('');
+    setAmt(raw);
+  };
+
+  const isValid = name.trim().length > 0 && parseFloat(amt) > 0;
 
   const handleAdd = () => {
-    const v = parseFloat(amt);
-    if (!v || v <= 0) { setError(true); return; }
-    setError(false);
-    onAdd({ name: name.trim() || 'Expense', amt: v, id: Date.now() });
+    if (!isValid) return;
+    onAdd({ name: name.trim(), amt: parseFloat(amt), id: Date.now() });
     setName('');
     setAmt('');
+    setError('');
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter') handleAdd();
+    if (e.key === 'Enter' && isValid) handleAdd();
   };
 
   return (
@@ -73,20 +95,27 @@ export default function AddExpenseCard({ onAdd }) {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKey}
         />
-        <div style={styles.row}>
-          <input
-            type="number"
-            placeholder="Amount"
-            min="0.01"
-            step="0.01"
-            inputMode="decimal"
-            value={amt}
-            onChange={(e) => { setAmt(e.target.value); setError(false); }}
-            onKeyDown={handleKey}
-            style={{ flex: 1, ...(error ? { borderColor: 'var(--red)' } : {}) }}
-          />
-          <span style={styles.unit}>Kč</span>
-          <button style={styles.btnPrimary} onClick={handleAdd}>+ Add</button>
+        <div>
+          <div style={styles.row}>
+            <input
+              type="text"
+              placeholder="Amount"
+              inputMode="decimal"
+              value={amt}
+              onChange={handleAmtChange}
+              onKeyDown={handleKey}
+              style={{ flex: 1, ...(error ? { borderColor: 'var(--red)' } : {}) }}
+            />
+            <span style={styles.unit}>{currency}</span>
+            <button
+              style={{ ...styles.btnPrimary, ...(!isValid ? styles.btnDisabled : {}) }}
+              onClick={handleAdd}
+              disabled={!isValid}
+            >
+              + Add
+            </button>
+          </div>
+          {error && <div style={styles.errorMsg}>{error}</div>}
         </div>
       </div>
     </div>

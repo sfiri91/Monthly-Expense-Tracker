@@ -1,3 +1,3 @@
 export function fmt(n) {
-  return Math.round(n).toLocaleString('cs-CZ');
+  return n.toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
