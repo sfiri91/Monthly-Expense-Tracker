@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { fmt } from '../utils/format';
+import ConfirmDialog from './ConfirmDialog';
 
 const styles = {
   card: {
@@ -79,47 +80,64 @@ const styles = {
 };
 
 export default function ExpenseList({ expenses, salary, currency, onDelete, onClear }) {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleClearClick = () => setShowConfirm(true);
+  const handleConfirm    = () => { onClear(); setShowConfirm(false); };
+  const handleCancel     = () => setShowConfirm(false);
+
   return (
-    <div style={styles.card}>
-      <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(10px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
+    <>
+      {showConfirm && (
+        <ConfirmDialog
+          title="Clear all expenses?"
+          message="This will permanently delete all your expenses for this month. This action cannot be undone."
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
 
-      <div style={styles.header}>
-        <span style={styles.label}>Expenses this month</span>
-        <button style={styles.btnClear} onClick={onClear}>Clear all</button>
-      </div>
+      <div style={styles.card}>
+        <style>{`
+          @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to   { opacity: 1; transform: translateX(0); }
+          }
+        `}</style>
 
-      <div style={styles.list}>
-        {expenses.length === 0 ? (
-          <div style={styles.empty}>No expenses yet.</div>
-        ) : (
-          expenses.map((e, idx) => {
-            const pct    = salary > 0 ? ((e.amt / salary) * 100).toFixed(1) : '—';
-            const isLast = idx === expenses.length - 1;
-            return (
-              <div
-                key={e.id}
-                style={{ ...styles.item, ...(isLast ? { borderBottom: 'none' } : {}) }}
-              >
-                <span style={styles.name} title={e.name}>{e.name}</span>
-                <span style={styles.pct}>{pct}%</span>
-                <span style={styles.amount}>{fmt(e.amt)} {currency}</span>
-                <button
-                  style={styles.btnDel}
-                  onClick={() => onDelete(e.id)}
-                  aria-label="Remove"
+        <div style={styles.header}>
+          <span style={styles.label}>Expenses this month</span>
+          <button style={styles.btnClear} onClick={handleClearClick}>Clear all</button>
+        </div>
+
+        <div style={styles.list}>
+          {expenses.length === 0 ? (
+            <div style={styles.empty}>No expenses yet.</div>
+          ) : (
+            expenses.map((e, idx) => {
+              const pct    = salary > 0 ? ((e.amt / salary) * 100).toFixed(1) : '—';
+              const isLast = idx === expenses.length - 1;
+              return (
+                <div
+                  key={e.id}
+                  style={{ ...styles.item, ...(isLast ? { borderBottom: 'none' } : {}) }}
                 >
-                  ×
-                </button>
-              </div>
-            );
-          })
-        )}
+                  <span style={styles.name} title={e.name}>{e.name}</span>
+                  <span style={styles.pct}>{pct}%</span>
+                  <span style={styles.amount}>{fmt(e.amt)} {currency}</span>
+                  <button
+                    style={styles.btnDel}
+                    onClick={() => onDelete(e.id)}
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
