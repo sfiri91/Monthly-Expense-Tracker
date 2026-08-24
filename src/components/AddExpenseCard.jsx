@@ -62,12 +62,13 @@ export default function AddExpenseCard({ currency, onAdd }) {
 
   const handleAmtChange = (e) => {
     const raw = e.target.value;
-    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) {
-      setError('Only numbers are allowed.');
+    if (raw !== '' && !/^\d+([.,]\d{0,2})?$/.test(raw)) {
+      setError('Only numbers with up to 2 decimal places are allowed.');
       return;
     }
     setError('');
-    setAmt(raw);
+    const normalized = raw.replace(/,/g, '.');
+    setAmt(normalized);
   };
 
   const isValid = name.trim().length > 0 && parseFloat(amt) > 0;
