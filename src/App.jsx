@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { fmt } from './utils/format';
 import Cylinder          from './components/Cylinder';
@@ -65,6 +65,7 @@ export default function App() {
   const [salary,   setSalary]   = useLocalStorage('et_salary',   0);
   const [currency, setCurrency] = useLocalStorage('et_currency', 'EUR');
   const [expenses, setExpenses] = useLocalStorage('et_expenses', []);
+  const [showCurrencySelector, setShowCurrencySelector] = useState(true);
 
   const total     = expenses.reduce((s, e) => s + e.amt, 0);
   const spentPct  = salary > 0 ? total / salary : 1;
@@ -78,10 +79,14 @@ export default function App() {
   const handleEditSalary = () => {
     setSalary(0);
     setExpenses([]);
+    setShowCurrencySelector(true);
   };
 
   // Currency can change freely at any time — no reset needed
-  const handleCurrencyChange = (c) => setCurrency(c);
+  const handleCurrencyChange = (c) => {
+    setCurrency(c);
+    setShowCurrencySelector(false);
+  };
 
   const handleAddExpense    = (expense) => setExpenses((prev) => [...prev, expense]);
   const handleDeleteExpense = (id)      => setExpenses((prev) => prev.filter((e) => e.id !== id));
@@ -142,16 +147,20 @@ export default function App() {
         </div>
       </div>
 
-      {/* Currency — always visible */}
-      <CurrencySelector currency={currency} onChange={handleCurrencyChange} />
+      {/* Currency */}
+      {showCurrencySelector && (
+        <CurrencySelector currency={currency} onChange={handleCurrencyChange} />
+      )}
 
       {/* Salary */}
-      <SalaryCard
-        salary={salary}
-        currency={currency}
-        onSet={handleSetSalary}
-        onEdit={handleEditSalary}
-      />
+      {
+        <SalaryCard
+          salary={salary}
+          currency={currency}
+          onSet={handleSetSalary}
+          onEdit={handleEditSalary}
+        />
+      }
 
       {/* Budget exceeded warning */}
       {salary > 0 && total > salary && (
