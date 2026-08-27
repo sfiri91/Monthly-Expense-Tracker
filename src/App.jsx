@@ -63,9 +63,9 @@ const styles = {
 
 export default function App() {
   const [salary,   setSalary]   = useLocalStorage('et_salary',   0);
-  const [currency, setCurrency] = useLocalStorage('et_currency', 'EUR');
+  const [currency, setCurrency] = useLocalStorage('et_currency', null);
   const [expenses, setExpenses] = useLocalStorage('et_expenses', []);
-  const [showCurrencySelector, setShowCurrencySelector] = useState(true);
+  const [showCurrencySelector, setShowCurrencySelector] = useState(() => !currency);
 
   const total     = expenses.reduce((s, e) => s + e.amt, 0);
   const spentPct  = salary > 0 ? total / salary : 1;
